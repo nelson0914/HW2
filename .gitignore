@@ -1,0 +1,6 @@
+# AI assistance documents (local only - not to be submitted to GitHub)
+AI_Report_NotebookLM_GPT.md
+AI_Assistance_Report.md
+*.pdf
+.DS_Store
+Thumbs.db
