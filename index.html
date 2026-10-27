@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kaggle 多元線性回歸 (Multiple Linear Regression) 題目精選指南 | 14–39 Features</title>
+  <meta name="description" content="精選 14-39 個輸入特徵的 Kaggle 多元線性回歸題目，搭配 CRISP-DM 流程、特徵選擇法、五大回歸假設檢驗指南與教學推薦。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+            <circle cx="18" cy="7" r="2"></circle>
+            <circle cx="12" cy="2" r="2"></circle>
+            <circle cx="6" cy="11" r="2"></circle>
+            <path d="M6 11 L12 2 L18 7"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">MLR Kaggle Guide</span>
+          <span class="brand-subtitle">多元線性回歸專題探索平台</span>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <a href="#datasets" class="nav-link">資料集總覽</a>
+        <a href="#top3" class="nav-link">教學推薦 Top 3</a>
+        <a href="#crisp-dm" class="nav-link">CRISP-DM 流程</a>
+        <a href="#feature-selection" class="nav-link">特徵選擇法</a>
+        <a href="#assumptions" class="nav-link">五大假設檢定</a>
+      </nav>
+
+      <div class="header-actions">
+        <button id="themeToggleBtn" class="icon-btn" title="切換深淺模式" aria-label="切換主題">
+          <svg id="moonIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg id="sunIcon" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+        <button id="copyHomeworkBtn" class="btn btn-primary btn-sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          複製作業模板
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-glow"></div>
+      <div class="container hero-content">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          <span>13 &lt; Number of Features &lt; 40</span>
+          <span class="badge-sep">•</span>
+          <span>連續數值預測 (Continuous Target)</span>
+        </div>
+
+        <h1 class="hero-title">
+          Kaggle 多元線性回歸題目選題指南
+          <span class="gradient-text">14–39 Features 精選實戰</span>
+        </h1>
+
+        <p class="hero-description">
+          專為機器學習回歸專案打造的資料集精選庫。嚴格滿足 <strong>14～39 個輸入特徵</strong> 限制，
+          完美支援 <code>sklearn.LinearRegression</code>、Ridge、Lasso、特徵選擇法評估、MSE / RMSE / R² 衡量及回歸五大假設診斷。
+        </p>
+
+        <div class="hero-stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">14–39</div>
+            <div class="stat-label">輸入特徵數限制 (X)</div>
+            <div class="stat-hint">不包含目標 Target 欄位</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">6+</div>
+            <div class="stat-label">推薦 Kaggle 資料集</div>
+            <div class="stat-hint">涵蓋天然符合與進階特徵選擇</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">6 階段</div>
+            <div class="stat-label">CRISP-DM 完整框架</div>
+            <div class="stat-hint">從商務理解到模型推論解釋</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">5 大假設</div>
+            <div class="stat-label">回歸假設檢驗診斷</div>
+            <div class="stat-hint">殘差常態性、同質變異與 VIF</div>
+          </div>
+        </div>
+
+        <!-- Warning Callout Box for House Prices -->
+        <div class="callout-card alert-info">
+          <div class="callout-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <div class="callout-body">
+            <strong>特別注意規格提醒：</strong>
+            Kaggle 經典題目 <em>House Prices — Advanced Regression Techniques</em> 原始包含 <strong>79 個特徵</strong>，
+            無法直接符合原始特徵限制；但非常推薦將其作為 <strong>Feature Selection (特徵選擇)</strong> 專題，使用 SelectKBest 或 Lasso 篩選至 14–39 個特徵進行建模。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Top 3 for Teaching Section -->
+    <section id="top3" class="section bg-subtle">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">TEACHING PICKS</div>
+          <h2 class="section-title">My Top 3 for Teaching (教學推薦前三名)</h2>
+          <p class="section-desc">根據教學直觀性、特徵純淨度、假設檢定適合度挑選的最佳教學與作業題目。</p>
+        </div>
+
+        <div class="top3-grid">
+          <!-- Card 1: Predict the Flood -->
+          <div class="top-card highlight-badge-card" data-dataset-id="flood-predict">
+            <div class="top-card-rank rank-1">#1 最推薦教學首選</div>
+            <div class="top-card-image-wrap">
+              <img src="https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=800&q=80" alt="Predict the Flood" class="top-card-img" loading="lazy">
+              <div class="img-overlay">
+                <span class="badge badge-success">20 數值特徵</span>
+                <span class="badge badge-accent">天然符合</span>
+              </div>
+            </div>
+            <div class="top-card-content">
+              <div class="top-card-header">
+                <h3 class="top-card-title">1. Predict the Flood (洪水預測)</h3>
+                <span class="target-chip">Target: FloodProbability (連續型)</span>
+              </div>
+              <p class="top-card-summary">
+                <strong>20 個純數值特徵</strong>，連續型機率目標值。非常適合講授 OLS 普通最小平方法、MSE、R²、殘差分析與回歸假設檢驗。
+              </p>
+              <div class="top-card-feature-list">
+                <div class="feature-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span><strong>零編碼門檻：</strong> 全為數值欄位，免去 One-Hot 類別編碼後的特徵爆炸問題</span>
+                </div>
+                <div class="feature-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span><strong>假設檢驗典範：</strong> 適合直接繪製殘差分佈圖與 Q-Q Plot 檢查常態性</span>
+                </div>
+                <div class="feature-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span><strong>特徵選擇評估：</strong> 正好適合在 20 個特徵中比較 SelectKBest、RFE 與 Lasso</span>
+                </div>
+              </div>
+              <div class="top-card-footer">
+                <button class="btn btn-outline btn-block open-detail-btn" data-id="1">查看實作細節與 Baseline 程式碼</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Istanbul Apartment Prices -->
+          <div class="top-card" data-dataset-id="istanbul-prices">
+            <div class="top-card-rank rank-2">#2 房價回歸經典</div>
+            <div class="top-card-image-wrap">
+              <img src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80" alt="Istanbul Apartment Prices" class="top-card-img" loading="lazy">
+              <div class="img-overlay">
+                <span class="badge badge-info">29 or fewer* 特徵</span>
+                <span class="badge badge-warning">含類別欄位</span>
+              </div>
+            </div>
+            <div class="top-card-content">
+              <div class="top-card-header">
+                <h3 class="top-card-title">2. Istanbul Apartment Prices 2026</h3>
+                <span class="target-chip">Target: Price (房價)</span>
+              </div>
+              <p class="top-card-summary">
+                適合練習<strong>類別特徵編碼 (Categorical Encoding)</strong>、特徵工程與房價回歸模型。建模前需精確檢查 CSV 欄位。
+              </p>
+              <div class="top-card-feature-list">
+                <div class="feature-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span><strong>真實商業場景：</strong> 房地產估價模型，易於直觀理解特徵權重 (坪數、地段、屋齡)</span>
+                </div>
+                <div class="feature-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span><strong>特徵前處理練習：</strong> 類別編碼後可搭配 Lasso 進行特徵稀疏化挑選</span>
+                </div>
+                <div class="feature-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span><strong>共線性診斷：</strong> 適合檢驗坪數與格局之多重共線性 (VIF 檢驗)</span>
+                </div>
+              </div>
+              <div class="top-card-footer">
+                <button class="btn btn-outline btn-block open-detail-btn" data-id="3">查看實作細節與 Baseline 程式碼</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Human-AI Interaction -->
+          <div class="top-card" data-dataset-id="human-ai">
+            <div class="top-card-rank rank-3">#3 前瞻人機互動</div>
+            <div class="top-card-image-wrap">
+              <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80" alt="Human–AI Interaction" class="top-card-img" loading="lazy">
+              <div class="img-overlay">
+                <span class="badge badge-purple">20 特徵 / 10,100 筆</span>
+                <span class="badge badge-accent">合成資料集</span>
+              </div>
+            </div>
+            <div class="top-card-content">
+              <div class="top-card-header">
+                <h3 class="top-card-title">3. Human–AI Interaction</h3>
+                <span class="target-chip">Target: Trust score (信任分數)</span>
+              </div>
+              <p class="top-card-summary">
+                <strong>20 個原始特徵，10,100 筆樣本</strong>。特別適合研究多元回歸係數 (Coefficients) 意義、類別特徵交互作用與共線性分析。
+              </p>
+              <div class="top-card-feature-list">
+                <div class="feature-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span><strong>樣本數充足：</strong> 10,100 筆資料，滿足大樣本漸近性質與穩健交叉驗證</span>
+                </div>
+                <div class="feature-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span><strong>模型可解釋性高：</strong> 可探討 AI 反應速度、透明度等特徵對信任度的邊際貢獻</span>
+                </div>
+                <div class="feature-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span><strong>正則化對照：</strong> 適合比較 Ridge 與 Lasso 對高相關變數的處置差異</span>
+                </div>
+              </div>
+              <div class="top-card-footer">
+                <button class="btn btn-outline btn-block open-detail-btn" data-id="5">查看實作細節與 Baseline 程式碼</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Datasets Full Directory & Interactive Table -->
+    <section id="datasets" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">CATALOG & FILTER</div>
+          <h2 class="section-title">推薦 Kaggle 回歸題目完整總覽</h2>
+          <p class="section-desc">即時篩選、搜尋與比較符合 14–39 特徵條件的資料集清單。</p>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="filter-bar-card">
+          <div class="search-input-group">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchInput" placeholder="搜尋資料集名稱、目標變數或適用性 (如: Flood, Price)..." aria-label="搜尋資料集">
+          </div>
+
+          <div class="filter-pills">
+            <button class="pill-btn active" data-filter="all">全部 (6)</button>
+            <button class="pill-btn" data-filter="excellent">Excellent 優先推薦 (4)</button>
+            <button class="pill-btn" data-filter="good">Good 適合實作 (2)</button>
+            <button class="pill-btn" data-filter="feature-select">需特徵選擇 (1)</button>
+          </div>
+        </div>
+
+        <!-- Interactive Table Container -->
+        <div class="table-responsive-wrapper">
+          <table class="custom-table" id="datasetTable">
+            <thead>
+              <tr>
+                <th style="width: 60px;">#</th>
+                <th>Kaggle Problem (題目名稱)</th>
+                <th>Features (特徵數)</th>
+                <th>Target (目標變數)</th>
+                <th>Suitability (適合度)</th>
+                <th>教學與實驗特性</th>
+                <th style="width: 130px; text-align: center;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="datasetTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Footnote info -->
+        <div class="table-footnote">
+          <p>
+            <strong>註記說明：</strong>
+            * Istanbul 資料集原始描述為 30 欄（含房價 Price 等欄位），精確輸入特徵需由 CSV 欄位去除 Target 與 ID。上述特徵數皆以官方資料描述為基準，若進行 One-Hot 類別編碼後維度可能增加。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CRISP-DM Workflow Section -->
+    <section id="crisp-dm" class="section bg-subtle">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">STANDARD METHODOLOGY</div>
+          <h2 class="section-title">建議作業流程：CRISP-DM + 特徵選擇</h2>
+          <p class="section-desc">完整覆蓋從商業理解到模型佈署的 6 大步驟，並提供完整可複製的 Python / Scikit-learn 範例實作代碼。</p>
+        </div>
+
+        <div class="crisp-dm-container">
+          <!-- Step Navigator -->
+          <div class="crisp-steps-nav" id="crispStepsNav">
+            <button class="step-nav-btn active" data-step="1">
+              <span class="step-num">1</span>
+              <span class="step-text">
+                <span class="step-title">Business Understanding</span>
+                <span class="step-sub">商務理解 & 定義目標</span>
+              </span>
+            </button>
+            <button class="step-nav-btn" data-step="2">
+              <span class="step-num">2</span>
+              <span class="step-text">
+                <span class="step-title">Data Understanding</span>
+                <span class="step-sub">資料理解 & 相關性檢視</span>
+              </span>
+            </button>
+            <button class="step-nav-btn" data-step="3">
+              <span class="step-num">3</span>
+              <span class="step-text">
+                <span class="step-title">Data Preparation</span>
+                <span class="step-sub">資料前處理 & 特徵切分</span>
+              </span>
+            </button>
+            <button class="step-nav-btn" data-step="4">
+              <span class="step-num">4</span>
+              <span class="step-text">
+                <span class="step-title">Modeling</span>
+                <span class="step-sub">OLS, Ridge, Lasso 建模</span>
+              </span>
+            </button>
+            <button class="step-nav-btn" data-step="5">
+              <span class="step-num">5</span>
+              <span class="step-text">
+                <span class="step-title">Evaluation</span>
+                <span class="step-sub">指標評估 & 五大假設檢驗</span>
+              </span>
+            </button>
+            <button class="step-nav-btn" data-step="6">
+              <span class="step-num">6</span>
+              <span class="step-text">
+                <span class="step-title">Deployment & Interpretation</span>
+                <span class="step-sub">模型推論 & 係數解釋</span>
+              </span>
+            </button>
+          </div>
+
+          <!-- Step Content Display -->
+          <div class="crisp-step-display" id="crispStepDisplay">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature Selection Methodologies Section -->
+    <section id="feature-selection" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">FEATURE ENGINEERING</div>
+          <h2 class="section-title">特徵選擇方法矩陣 (Feature Selection Matrix)</h2>
+          <p class="section-desc">
+            要求學生在<strong>僅使用訓練集 (Training Data)</strong> 的嚴格防洩漏條件下，比較挑選 <strong>14、20、25 或 30</strong> 個特徵之效果。
+          </p>
+        </div>
+
+        <div class="fs-methods-grid">
+          <!-- Method 1: SelectKBest -->
+          <div class="fs-card">
+            <div class="fs-card-header">
+              <div class="fs-type-tag filter-tag">Filter Method (過濾法)</div>
+              <h3 class="fs-title">SelectKBest (f_regression / mutual_info)</h3>
+            </div>
+            <p class="fs-desc">
+              透過單變量統計檢定（如 F 檢定或互資訊量），計算每個特徵與目標變數的相關強度，選取前 k 個最高分者。
+            </p>
+            <div class="fs-meta">
+              <div><strong>運算速度：</strong> 極快 (適合高維度初步篩選)</div>
+              <div><strong>缺點：</strong> 忽略特徵之間的複合交互作用與共線性</div>
+            </div>
+            <pre class="code-snippet"><code>from sklearn.feature_selection import SelectKBest, f_regression
+selector = SelectKBest(score_func=f_regression, k=20)
+X_train_selected = selector.fit_transform(X_train, y_train)</code></pre>
+          </div>
+
+          <!-- Method 2: RFE -->
+          <div class="fs-card">
+            <div class="fs-card-header">
+              <div class="fs-type-tag wrapper-tag">Wrapper Method (包裝法)</div>
+              <h3 class="fs-title">RFE (遞迴特徵消除法)</h3>
+            </div>
+            <p class="fs-desc">
+              反覆訓練回歸模型，每次淘汰權重係數絕對值最小的特徵，遞迴修剪直到剩下指定的特徵數。
+            </p>
+            <div class="fs-meta">
+              <div><strong>優勢：</strong> 考慮特徵與估計器的共變影響</div>
+              <div><strong>缺點：</strong> 需多次重新訓練模型，運算量隨維度增加</div>
+            </div>
+            <pre class="code-snippet"><code>from sklearn.feature_selection import RFE
+from sklearn.linear_model import LinearRegression
+rfe = RFE(estimator=LinearRegression(), n_features_to_select=20)
+X_train_rfe = rfe.fit_transform(X_train, y_train)</code></pre>
+          </div>
+
+          <!-- Method 3: SFS -->
+          <div class="fs-card">
+            <div class="fs-card-header">
+              <div class="fs-type-tag wrapper-tag">Wrapper Method (包裝法)</div>
+              <h3 class="fs-title">Sequential Feature Selection (SFS)</h3>
+            </div>
+            <p class="fs-desc">
+              序列式貪婪演算法（可選前向 Forward 或後向 Backward），基於交叉驗證分數逐步加入或剔除特徵。
+            </p>
+            <div class="fs-meta">
+              <div><strong>優勢：</strong> 評估指標直接對齊交叉驗證 $R^2$ 或負 MSE</div>
+              <div><strong>缺點：</strong> 容易陷入局部最優解，計算成本較高</div>
+            </div>
+            <pre class="code-snippet"><code>from sklearn.feature_selection import SequentialFeatureSelector
+sfs = SequentialFeatureSelector(LinearRegression(), n_features_to_select=20, direction='forward', cv=5)
+X_train_sfs = sfs.fit_transform(X_train, y_train)</code></pre>
+          </div>
+
+          <!-- Method 4: Lasso L1 Regularization -->
+          <div class="fs-card">
+            <div class="fs-card-header">
+              <div class="fs-type-tag embedded-tag">Embedded Method (嵌入法)</div>
+              <h3 class="fs-title">Lasso L1 正則化稀疏性</h3>
+            </div>
+            <p class="fs-desc">
+              利用 L1 懲罰項將不重要或冗餘特徵的回歸係數直接壓縮至 0，自然達到特徵自動淘汰。
+            </p>
+            <div class="fs-meta">
+              <div><strong>優勢：</strong> 訓練模型與特徵選擇同步完成，防止過擬合</div>
+              <div><strong>調參重點：</strong> 需透過 LassoCV 尋找最佳正則化懲罰 $\alpha$</div>
+            </div>
+            <pre class="code-snippet"><code>from sklearn.linear_model import LassoCV
+lasso = LassoCV(cv=5).fit(X_train, y_train)
+selected_mask = (lasso.coef_ != 0)
+selected_features = X_train.columns[selected_mask]</code></pre>
+          </div>
+
+          <!-- Method 5: Permutation Importance -->
+          <div class="fs-card full-span-card">
+            <div class="fs-card-header">
+              <div class="fs-type-tag inspection-tag">Model-Agnostic (模型無關檢驗)</div>
+              <h3 class="fs-title">Permutation Importance (排列重要性)</h3>
+            </div>
+            <p class="fs-desc">
+              將某一特徵欄位的值隨機打亂（打斷其與目標變數的關聯），觀察模型評估指標（如 $R^2$ 或 MSE）下降的劇烈程度。下降越多代表該特徵越關鍵。
+            </p>
+            <div class="fs-meta">
+              <div><strong>核心特質：</strong> 直觀可靠，且能在驗證集上客觀檢測是否真正對泛化能力產生貢獻。</div>
+            </div>
+            <pre class="code-snippet"><code>from sklearn.inspection import permutation_importance
+perm = permutation_importance(model, X_train, y_train, n_repeats=10, random_state=42)
+top_k_indices = perm.importances_mean.argsort()[::-1][:20]</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Regression Assumptions & Diagnostics Section -->
+    <section id="assumptions" class="section bg-subtle">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">THEORETICAL RIGOR</div>
+          <h2 class="section-title">五大多元線性回歸假設檢定 (The 5 Assumptions)</h2>
+          <p class="section-desc">在專案作業中，評估模型時必須檢視並回答以下五大假設是否滿足：</p>
+        </div>
+
+        <div class="assumptions-grid">
+          <!-- Assumption 1 -->
+          <div class="assumption-card">
+            <div class="assumption-badge">假設 1</div>
+            <h3 class="assumption-title">線性關係 (Linearity)</h3>
+            <p class="assumption-statement">自變數 $X$ 與因變數 $Y$ 之間必須具備實質的線性關聯性。</p>
+            <div class="diag-box">
+              <span class="diag-label">診斷手法：</span>
+              <span>繪製各特徵與 Target 之散佈圖、檢視殘差對預測值散佈圖 (Residuals vs Fitted Plot)。若呈現拋物線形狀則需進行多項式特徵轉換。</span>
+            </div>
+          </div>
+
+          <!-- Assumption 2 -->
+          <div class="assumption-card">
+            <div class="assumption-badge">假設 2</div>
+            <h3 class="assumption-title">殘差獨立性 (Independence)</h3>
+            <p class="assumption-statement">各觀測樣本之殘差 $\epsilon_i$ 互相獨立，不存在自相關 (Autocorrelation)。</p>
+            <div class="diag-box">
+              <span class="diag-label">診斷手法：</span>
+              <span>計算 <strong>Durbin-Watson 統計量</strong> (數值介於 0~4，約等於 2 代表無自相關；顯著小於 2 代表正自相關)。</span>
+            </div>
+          </div>
+
+          <!-- Assumption 3 -->
+          <div class="assumption-card">
+            <div class="assumption-badge">假設 3</div>
+            <h3 class="assumption-title">同質變異性 (Homoscedasticity)</h3>
+            <p class="assumption-statement">所有預測值水平下，殘差之變異數皆保持恆定 $\text{Var}(\epsilon_i) = \sigma^2$。</p>
+            <div class="diag-box">
+              <span class="diag-label">診斷手法：</span>
+              <span>檢查殘差對預測值圖（漏斗形狀即代表異質變異）、執行 <strong>Breusch-Pagan 檢定</strong> 或 <strong>White 檢定</strong>。</span>
+            </div>
+          </div>
+
+          <!-- Assumption 4 -->
+          <div class="assumption-card">
+            <div class="assumption-badge">假設 4</div>
+            <h3 class="assumption-title">殘差常態性 (Normality)</h3>
+            <p class="assumption-statement">回歸誤差項 $\epsilon$ 服從常態分佈 $\epsilon \sim N(0, \sigma^2)$。</p>
+            <div class="diag-box">
+              <span class="diag-label">診斷手法：</span>
+              <span>繪製 <strong>Q-Q Plot (分位數對照圖)</strong> 與殘差直方圖 KDE、執行 <strong>Shapiro-Wilk 檢定</strong> 或 <strong>Jarque-Bera 檢定</strong>。</span>
+            </div>
+          </div>
+
+          <!-- Assumption 5 -->
+          <div class="assumption-card full-span-card">
+            <div class="assumption-badge">假設 5</div>
+            <h3 class="assumption-title">無多重共線性 (No Severe Multicollinearity)</h3>
+            <p class="assumption-statement">自變數之間不得存在過度強烈之線性相依關係，否則會導致回歸係數標準誤膨脹、正負號逆轉。</p>
+            <div class="diag-box">
+              <span class="diag-label">診斷與處置手法：</span>
+              <span>
+                計算 <strong>變異數膨脹因子 VIF (Variance Inflation Factor)</strong>。
+                一般準則：$\text{VIF} &lt; 5$ 屬良好，$\text{VIF} &gt; 10$ 代表存在嚴重多重共線性。
+                處置方式包含：剔除高 VIF 特徵、改用 <strong>Ridge (L2 脊回歸)</strong> 或透過 PCA 降維。
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Dataset Detail Modal -->
+  <div id="datasetModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="badge badge-primary modal-badge" id="modalSuitability">Suitability</span>
+          <h2 class="modal-title" id="modalTitle">Dataset Name</h2>
+          <span class="modal-sub" id="modalTarget">Target</span>
+        </div>
+        <button class="modal-close-btn" id="closeModalBtn" aria-label="關閉視窗">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden">已複製到剪貼簿！</div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-left">
+        <div class="footer-brand">MLR Kaggle Guide • 碩士專題與機器學習作業精選</div>
+        <div class="footer-note">涵蓋 14–39 Features 多元線性回歸、CRISP-DM 與特徵工程標準範式</div>
+      </div>
+      <div class="footer-right">
+        <a href="#top3" class="footer-link">教學推薦</a>
+        <a href="#datasets" class="footer-link">資料清單</a>
+        <a href="#crisp-dm" class="footer-link">CRISP-DM</a>
+        <a href="#assumptions" class="footer-link">假設檢定</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
