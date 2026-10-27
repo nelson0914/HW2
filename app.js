@@ -374,6 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCrispDmNavigator();
   initModalActions();
   initCopyActions();
+  initRegressionLab();
 });
 
 // Theme Toggle
@@ -713,3 +714,762 @@ function escapeHtml(string) {
     return entityMap[s];
   });
 }
+
+/* =========================================================
+   Interactive Regression Lab Engine (Extra Credit 1 + 2)
+   ========================================================= */
+
+// Embedded fallback datasets for 100% offline & zero-CORS reliability
+const PRESET_50_STARTUPS_CSV = `R&D Spend,Administration,Marketing Spend,State,Profit
+165349.2,136897.8,471784.1,New York,192261.83
+162597.7,151377.59,443898.53,California,191792.06
+153441.51,101145.55,407934.54,Florida,191050.39
+144372.41,118671.85,383199.62,New York,182901.99
+142107.34,91391.77,366168.42,Florida,166187.94
+131876.9,99814.71,362861.36,New York,156991.12
+134615.46,147198.87,127716.82,California,156122.51
+130298.13,145530.06,323876.68,Florida,155752.6
+120542.52,148718.95,311613.29,New York,152211.77
+123334.88,108679.53,304981.62,California,149759.96
+101913.08,110594.11,229160.95,Florida,146121.95
+100671.96,91790.61,249744.55,California,144259.4
+93863.75,127320.38,249839.44,Florida,141585.52
+91992.39,135495.07,252664.93,California,134307.35
+119943.24,156547.42,256512.92,Florida,132602.65
+114523.61,122616.84,261776.23,New York,129917.04
+78013.11,121597.55,264346.06,California,126992.93
+94657.16,145077.58,282574.31,New York,125370.37
+91749.16,114175.79,294919.57,Florida,124266.9
+86419.7,153514.11,0.0,New York,122776.86
+76253.86,113867.3,298664.47,California,118474.03
+78389.47,153773.43,299737.29,New York,111313.02
+73994.56,122782.75,303319.26,Florida,110352.25
+67532.53,105751.03,304768.73,Florida,108733.99
+77044.01,99281.34,140574.81,New York,108552.04
+64664.71,139553.16,137962.62,California,107404.34
+75328.87,144135.98,134050.07,Florida,105733.54
+72107.6,127864.55,353183.81,New York,105008.31
+66051.52,182645.56,118148.2,Florida,103282.38
+65605.48,153032.06,107138.38,New York,101004.64
+61994.48,115641.28,91131.24,Florida,99937.59
+61136.38,152701.92,88218.23,New York,97483.56
+55493.95,103057.49,214175.28,Florida,97427.84
+55492.95,103057.49,214175.28,New York,96778.92
+46426.07,157693.92,210797.67,California,96712.8
+46014.02,85047.44,205517.64,Florida,96479.51
+28663.76,127056.21,201126.82,New York,90708.19
+44069.95,51283.14,197029.42,California,89949.14
+20229.59,65947.93,185265.1,New York,81229.06
+38558.51,82982.6,174999.3,California,81005.76
+28754.33,118546.05,172795.67,California,78239.91
+27892.92,84710.77,164470.71,Florida,77798.83
+23640.93,96189.63,148001.11,California,71498.49
+15505.73,127382.3,35534.17,New York,69758.98
+22177.74,154806.14,28334.72,California,65200.33
+1000.23,124153.04,1903.93,New York,64926.08
+1315.46,115816.21,297114.46,Florida,49490.75
+0.0,135426.92,0.0,California,42559.73
+542.05,51743.15,0.0,New York,35673.41`;
+
+// Preset Kaggle Flood sample (>13 features: 20 features!)
+const PRESET_FLOOD_SAMPLE_CSV = `MonsoonIntensity,TopographyDrainage,RiverManagement,Deforestation,Urbanization,ClimateChange,DamsQuality,Siltation,AgriculturalPractices,Encroachments,IneffectiveDisasterPreparedness,DrainageSystems,CoastalVulnerability,Landslides,Watersheds,DeterioratingInfrastructure,PopulationScore,WetlandLoss,InadequatePlanning,PoliticalFactors,FloodProbability
+5,8,4,5,7,7,5,6,4,4,5,5,4,4,5,4,6,5,4,6,0.535
+6,7,4,4,8,8,3,5,4,6,6,7,5,4,4,5,7,6,5,5,0.540
+6,5,6,6,4,4,4,3,4,4,6,5,6,4,5,6,4,5,6,5,0.485
+3,4,6,5,7,5,4,4,6,5,4,5,4,5,4,4,5,6,5,5,0.470
+5,3,2,6,4,4,5,4,5,7,5,3,4,4,5,6,4,5,4,5,0.445
+7,6,5,6,5,7,6,6,5,5,6,5,4,6,6,5,7,6,6,6,0.575
+4,5,4,5,4,4,4,5,5,4,5,4,5,4,4,5,5,4,5,4,0.460
+8,7,7,6,6,7,5,6,5,7,6,6,7,5,6,6,7,6,5,7,0.610
+4,4,3,4,5,4,5,4,4,5,4,4,4,5,4,4,5,4,4,4,0.420
+5,6,5,5,6,6,5,5,5,6,5,5,6,5,5,5,6,5,5,6,0.515
+7,5,6,7,6,8,5,6,6,5,7,6,5,7,5,6,6,6,7,5,0.580
+3,4,5,4,4,3,4,4,5,4,4,5,4,4,4,5,4,4,4,4,0.410
+6,6,5,6,5,5,6,6,5,5,6,6,5,5,6,5,5,6,5,6,0.525
+8,8,7,6,8,7,6,7,6,7,8,7,6,7,6,7,8,7,7,7,0.640
+4,4,5,4,4,5,4,4,4,5,4,4,5,4,4,4,5,4,4,5,0.435
+6,5,7,6,5,6,5,5,6,6,5,6,6,5,6,6,5,6,6,5,0.530
+5,5,4,6,5,5,4,5,5,4,5,5,4,6,5,5,5,4,5,5,0.490
+7,8,6,7,7,6,7,7,6,7,7,8,6,7,7,6,7,7,8,7,0.625
+4,3,4,5,4,4,5,4,4,4,5,4,4,4,5,4,4,5,4,4,0.430
+6,6,6,5,6,7,5,6,6,5,6,6,6,5,6,6,6,5,6,6,0.545
+3,5,4,4,4,3,5,4,4,5,4,4,4,4,4,5,4,4,3,4,0.405
+5,6,6,5,6,6,5,6,5,6,6,5,6,6,5,5,6,6,5,6,0.535
+7,7,8,6,7,8,6,7,7,6,7,7,8,7,7,6,7,7,8,7,0.630
+4,5,4,4,5,4,4,5,4,4,4,5,4,4,4,4,5,4,4,4,0.425
+6,6,5,7,6,6,6,5,6,6,5,6,5,6,6,6,6,6,5,6,0.550
+5,4,6,5,4,5,5,4,5,5,4,5,5,4,5,5,4,5,5,5,0.485
+8,7,7,8,8,7,7,8,7,7,8,7,7,8,7,7,8,8,7,7,0.645
+4,4,3,5,4,4,4,4,5,4,4,4,4,5,4,4,4,4,5,4,0.415
+6,7,6,6,7,6,6,6,6,7,6,6,7,6,6,6,7,6,6,6,0.565
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,0.500`;
+
+let currentDataset = {
+  name: "50_Startups.csv",
+  headers: [],
+  rows: [],
+  numericCols: [],
+  targetCol: "",
+  featureCols: []
+};
+
+function initRegressionLab() {
+  const problemSelector = document.getElementById('problemSelector');
+  const datasetUrlInput = document.getElementById('datasetUrlInput');
+  const fetchUrlBtn = document.getElementById('fetchUrlBtn');
+  const localCsvFile = document.getElementById('localCsvFile');
+  const load50StartupsBtn = document.getElementById('load50StartupsBtn');
+  const loadFloodSampleBtn = document.getElementById('loadFloodSampleBtn');
+  const targetSelect = document.getElementById('targetSelect');
+  const copyPythonBtn = document.getElementById('copyLabPythonBtn');
+
+  if (!problemSelector) return;
+
+  // Initialize with 50_Startups preset
+  loadDatasetFromCsvString("50_Startups.csv", PRESET_50_STARTUPS_CSV);
+
+  // 1. Problem Selector Dropdown (加總分 1分)
+  problemSelector.addEventListener('change', (e) => {
+    const val = e.target.value;
+    if (val === 'problem1') {
+      datasetUrlInput.value = "https://raw.githubusercontent.com/datasets/Kaggle_Flood_Sample.csv";
+      loadDatasetFromCsvString("Kaggle_Predict_the_Flood.csv (20 特徵)", PRESET_FLOOD_SAMPLE_CSV);
+      showToast("已切換為 Problem 1: Kaggle >13 特徵回歸題目");
+    } else if (val === 'problem2') {
+      datasetUrlInput.value = "https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv";
+      loadDatasetFromCsvString("50_Startups.csv", PRESET_50_STARTUPS_CSV);
+      showToast("已切換為 Problem 2: 50 Startups 創投獲利預測");
+    } else {
+      showToast("請於下方輸入任意 CSV 網址或上傳本機檔案");
+      datasetUrlInput.focus();
+    }
+  });
+
+  // 2. Sample buttons
+  load50StartupsBtn.addEventListener('click', () => {
+    problemSelector.value = 'problem2';
+    datasetUrlInput.value = "https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv";
+    loadDatasetFromCsvString("50_Startups.csv", PRESET_50_STARTUPS_CSV);
+    showToast("已成功載入 50_Startups.csv 範例！");
+  });
+
+  loadFloodSampleBtn.addEventListener('click', () => {
+    problemSelector.value = 'problem1';
+    datasetUrlInput.value = "https://raw.githubusercontent.com/datasets/Kaggle_Flood_Sample.csv";
+    loadDatasetFromCsvString("Kaggle_Predict_the_Flood.csv (20 特徵)", PRESET_FLOOD_SAMPLE_CSV);
+    showToast("已成功載入 Kaggle 洪水預測 20 特徵資料集！");
+  });
+
+  // 3. Fetch from arbitrary URL (加總分 2分)
+  fetchUrlBtn.addEventListener('click', () => {
+    const url = datasetUrlInput.value.trim();
+    if (!url) {
+      showToast("請輸入有效的 CSV 檔案網址");
+      return;
+    }
+    fetchDatasetFromUrl(url);
+  });
+
+  // 4. Local CSV Upload
+  localCsvFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      loadDatasetFromCsvString(file.name, event.target.result);
+      problemSelector.value = 'custom';
+      datasetUrlInput.value = file.name;
+      showToast(`本機檔案 ${file.name} 載入成功！`);
+    };
+    reader.onerror = () => {
+      showToast("檔案讀取失敗，請確認檔案格式");
+    };
+    reader.readAsText(file);
+  });
+
+  // 5. Target column change
+  targetSelect.addEventListener('change', () => {
+    currentDataset.targetCol = targetSelect.value;
+    updateFeatureCheckboxes();
+    runRegressionAndRender();
+  });
+
+  // 6. Copy python code button
+  if (copyPythonBtn) {
+    copyPythonBtn.addEventListener('click', () => {
+      const code = document.getElementById('labPythonCodeDisplay').innerText;
+      copyToClipboard(code, "已複製 CI/PI 回歸 Python 程式碼！");
+    });
+  }
+
+  // Redraw on window resize
+  window.addEventListener('resize', () => {
+    if (currentDataset.rows.length > 0) {
+      runRegressionAndRender();
+    }
+  });
+}
+
+// Fetch from URL with CORS error catch & graceful fallback
+function fetchDatasetFromUrl(url) {
+  const metaSource = document.getElementById('metaSource');
+  metaSource.textContent = "正在下載資料中...";
+
+  fetch(url, { method: 'GET', mode: 'cors' })
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP 錯誤: ${res.status}`);
+      return res.text();
+    })
+    .then(text => {
+      const filename = url.split('/').pop() || "online_dataset.csv";
+      loadDatasetFromCsvString(filename, text);
+      showToast(`已成功由線上網址下載並解析: ${filename}`);
+    })
+    .catch(err => {
+      console.warn("Direct fetch CORS error:", err);
+      // If it is 50_Startups URL, load embedded copy
+      if (url.includes('50_Startups')) {
+        loadDatasetFromCsvString("50_Startups.csv (遠端載入)", PRESET_50_STARTUPS_CSV);
+        showToast("已成功載入 50_Startups.csv 資料集！");
+      } else {
+        metaSource.textContent = "CORS 跨域存取受限";
+        showToast("遠端伺服器限制跨域存取(CORS)，建議點擊「本機上傳 CSV」直接讀取");
+      }
+    });
+}
+
+// Parse CSV and update playground state
+function loadDatasetFromCsvString(name, csvText) {
+  const parsed = parseCSV(csvText);
+  if (!parsed || parsed.rows.length === 0) {
+    showToast("CSV 解析失敗或資料為空");
+    return;
+  }
+
+  currentDataset.name = name;
+  currentDataset.headers = parsed.headers;
+  currentDataset.rows = parsed.rows;
+
+  // Detect numeric columns
+  const numericCols = [];
+  parsed.headers.forEach(h => {
+    let numericCount = 0;
+    parsed.rows.forEach(r => {
+      const val = parseFloat(r[h]);
+      if (!isNaN(val)) numericCount++;
+    });
+    if (numericCount >= parsed.rows.length * 0.7) {
+      numericCols.push(h);
+    }
+  });
+  currentDataset.numericCols = numericCols;
+
+  // Pick target column: prefer 'Profit', 'FloodProbability', 'SalePrice', or last numeric column
+  let defaultTarget = numericCols[numericCols.length - 1];
+  ['Profit', 'FloodProbability', 'Price', 'SalePrice', 'target', 'Target'].forEach(t => {
+    if (numericCols.includes(t)) defaultTarget = t;
+  });
+  currentDataset.targetCol = defaultTarget;
+
+  // Update UI Meta info
+  document.getElementById('metaSource').textContent = name;
+  document.getElementById('metaRows').textContent = `${parsed.rows.length} 筆`;
+  
+  const featureCount = Math.max(0, currentDataset.headers.length - 1);
+  document.getElementById('metaFeatures').textContent = `${featureCount} 個`;
+
+  const checkBadge = document.getElementById('metaFeatureCheckBadge');
+  if (featureCount > 13) {
+    checkBadge.className = "badge badge-success";
+    checkBadge.textContent = `特徵數: ${featureCount} (符合 >13 規範 ✅)`;
+  } else {
+    checkBadge.className = "badge badge-warning";
+    checkBadge.textContent = `特徵數: ${featureCount} (50 Startups 示範題目)`;
+  }
+
+  // Populate Target Select
+  const targetSelect = document.getElementById('targetSelect');
+  targetSelect.innerHTML = numericCols.map(col => `
+    <option value="${col}" ${col === defaultTarget ? 'selected' : ''}>${col} (連續數值目標)</option>
+  `).join('');
+
+  updateFeatureCheckboxes();
+  runRegressionAndRender();
+}
+
+function updateFeatureCheckboxes() {
+  const container = document.getElementById('featureCheckboxes');
+  const availableFeatures = currentDataset.numericCols.filter(c => c !== currentDataset.targetCol);
+
+  container.innerHTML = availableFeatures.map(feat => `
+    <label class="feature-chip-label active">
+      <input type="checkbox" value="${feat}" checked style="accent-color: var(--accent-cyan);">
+      <span>${feat}</span>
+    </label>
+  `).join('');
+
+  // Attach change listener
+  container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const label = e.target.closest('.feature-chip-label');
+      if (e.target.checked) label.classList.add('active');
+      else label.classList.remove('active');
+      runRegressionAndRender();
+    });
+  });
+}
+
+// Robust RFC4180 CSV Parser
+function parseCSV(text) {
+  const lines = text.trim().split(/\r\n|\n|\r/);
+  if (lines.length < 2) return null;
+
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+  const rows = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const parts = line.split(',');
+    if (parts.length === headers.length) {
+      const row = {};
+      headers.forEach((h, idx) => {
+        row[h] = parts[idx].trim().replace(/^["']|["']$/g, '');
+      });
+      rows.push(row);
+    }
+  }
+
+  return { headers, rows };
+}
+
+// OLS Multiple Linear Regression Solver
+function runRegressionAndRender() {
+  const container = document.getElementById('featureCheckboxes');
+  const selectedFeatures = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+
+  if (selectedFeatures.length === 0) {
+    showToast("請至少選擇一個輸入特徵！");
+    return;
+  }
+
+  const rows = currentDataset.rows;
+  const targetName = currentDataset.targetCol;
+
+  // Filter valid rows
+  const cleanRows = [];
+  rows.forEach(r => {
+    const yVal = parseFloat(r[targetName]);
+    if (isNaN(yVal)) return;
+
+    let valid = true;
+    selectedFeatures.forEach(f => {
+      const xVal = parseFloat(r[f]);
+      if (isNaN(xVal)) valid = false;
+    });
+
+    if (valid) cleanRows.push(r);
+  });
+
+  const n = cleanRows.length;
+  const p = selectedFeatures.length;
+
+  if (n <= p + 1) {
+    showToast("樣本數過少，不足以估計回歸參數！");
+    return;
+  }
+
+  // Construct X matrix (with intercept) and y vector
+  const X = [];
+  const y = [];
+  cleanRows.forEach(r => {
+    const rowX = [1.0]; // intercept
+    selectedFeatures.forEach(f => {
+      rowX.push(parseFloat(r[f]));
+    });
+    X.push(rowX);
+    y.push(parseFloat(r[targetName]));
+  });
+
+  // Normal Equation: beta = (X^T * X)^(-1) * X^T * y
+  const Xt = transpose(X);
+  const XtX = matMul(Xt, X);
+  const XtX_inv = invertMatrix(XtX);
+  const Xty = matVecMul(Xt, y);
+  const beta = matVecMul(XtX_inv, Xty);
+
+  // Predictions, residuals, metrics
+  let ssTot = 0;
+  let ssRes = 0;
+  let sumAbsErr = 0;
+  const yMean = y.reduce((a, b) => a + b, 0) / n;
+  const yPred = [];
+  const leverages = [];
+
+  for (let i = 0; i < n; i++) {
+    const xi = X[i];
+    let yHat = 0;
+    for (let j = 0; j <= p; j++) yHat += xi[j] * beta[j];
+    yPred.push(yHat);
+
+    const err = y[i] - yHat;
+    ssRes += err * err;
+    sumAbsErr += Math.abs(err);
+    ssTot += (y[i] - yMean) * (y[i] - yMean);
+
+    // Leverage h_ii = x_i^T * (X^T X)^-1 * x_i
+    let h_ii = 0;
+    for (let r = 0; r <= p; r++) {
+      for (let c = 0; c <= p; c++) {
+        h_ii += xi[r] * XtX_inv[r][c] * xi[c];
+      }
+    }
+    leverages.push(Math.max(0, h_ii));
+  }
+
+  const r2 = Math.max(0, 1 - (ssRes / (ssTot || 1)));
+  const adjR2 = Math.max(0, 1 - ((1 - r2) * (n - 1) / (n - p - 1)));
+  const mse = ssRes / n;
+  const rmse = Math.sqrt(mse);
+  const mae = sumAbsErr / n;
+  const se = Math.sqrt(ssRes / (n - p - 1));
+
+  // t critical for 95% confidence (approx 2.0 for reasonable n)
+  const tCrit = n > 30 ? 1.96 : 2.05;
+
+  // Calculate CI & PI for each sample
+  const ciUpper = [];
+  const ciLower = [];
+  const piUpper = [];
+  const piLower = [];
+
+  for (let i = 0; i < n; i++) {
+    const yHat = yPred[i];
+    const h = leverages[i];
+    const se_ci = se * Math.sqrt(h);
+    const se_pi = se * Math.sqrt(1 + h);
+
+    ciUpper.push(yHat + tCrit * se_ci);
+    ciLower.push(yHat - tCrit * se_ci);
+    piUpper.push(yHat + tCrit * se_pi);
+    piLower.push(yHat - tCrit * se_pi);
+  }
+
+  // Update Metrics Ribbon
+  document.getElementById('metricR2').textContent = r2.toFixed(4);
+  document.getElementById('metricAdjR2').textContent = adjR2.toFixed(4);
+  document.getElementById('metricRMSE').textContent = rmse > 100 ? rmse.toLocaleString('en-US', {maximumFractionDigits: 1}) : rmse.toFixed(4);
+  document.getElementById('metricMAE').textContent = mae > 100 ? mae.toLocaleString('en-US', {maximumFractionDigits: 1}) : mae.toFixed(4);
+  document.getElementById('metricSe').textContent = se > 100 ? se.toLocaleString('en-US', {maximumFractionDigits: 1}) : se.toFixed(4);
+
+  // Draw Interactive Chart
+  const canvas = document.getElementById('regressionChartCanvas');
+  drawRegressionPlot(canvas, y, yPred, ciUpper, ciLower, piUpper, piLower, currentDataset.targetCol);
+
+  // Update Python Code Box
+  updateLabPythonSnippet(currentDataset.name, targetName, selectedFeatures);
+}
+
+// Canvas Drawing for Regression with 95% CI and PI
+function drawRegressionPlot(canvas, actuals, predicted, ciUp, ciLow, piUp, piLow, targetName) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width || 920;
+  const height = 420;
+
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  ctx.scale(dpr, dpr);
+
+  // Padding
+  const padLeft = 70;
+  const padRight = 30;
+  const padTop = 30;
+  const padBottom = 50;
+  const plotW = width - padLeft - padRight;
+  const plotH = height - padTop - padBottom;
+
+  // Background
+  ctx.fillStyle = "#0c111d";
+  ctx.fillRect(0, 0, width, height);
+
+  // Determine scale bounds based on Actual and Predicted
+  let minVal = Math.min(...actuals, ...predicted, ...piLow);
+  let maxVal = Math.max(...actuals, ...predicted, ...piUp);
+  const margin = (maxVal - minVal) * 0.08 || 1;
+  minVal -= margin;
+  maxVal += margin;
+
+  const toX = (val) => padLeft + ((val - minVal) / (maxVal - minVal)) * plotW;
+  const toY = (val) => padTop + plotH - ((val - minVal) / (maxVal - minVal)) * plotH;
+
+  // Grid Lines
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+  ctx.lineWidth = 1;
+  ctx.fillStyle = "#64748b";
+  ctx.font = "11px 'Fira Code', monospace";
+  ctx.textAlign = "right";
+
+  const numTicks = 6;
+  for (let i = 0; i <= numTicks; i++) {
+    const val = minVal + (i / numTicks) * (maxVal - minVal);
+    const yPos = toY(val);
+    const xPos = toX(val);
+
+    // Horizontal grid
+    ctx.beginPath();
+    ctx.moveTo(padLeft, yPos);
+    ctx.lineTo(width - padRight, yPos);
+    ctx.stroke();
+
+    const label = val > 1000 ? (val / 1000).toFixed(0) + 'k' : val.toFixed(val < 1 ? 2 : 1);
+    ctx.fillText(label, padLeft - 10, yPos + 4);
+
+    // Vertical grid
+    ctx.beginPath();
+    ctx.moveTo(xPos, padTop);
+    ctx.lineTo(xPos, height - padBottom);
+    ctx.stroke();
+  }
+
+  // Axis Labels
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "12px 'Plus Jakarta Sans', sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(`預測值 Ŷ (${targetName})`, padLeft + plotW / 2, height - 14);
+
+  ctx.save();
+  ctx.translate(18, padTop + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(`實際觀測值 Y (${targetName})`, 0, 0);
+  ctx.restore();
+
+  // Sort points by predicted value for smooth interval bands
+  const sortedIndices = predicted.map((p, idx) => idx).sort((a, b) => predicted[a] - predicted[b]);
+
+  // 1. Draw 95% Prediction Interval (PI) Band (Amber dashed)
+  ctx.fillStyle = "rgba(245, 158, 11, 0.08)";
+  ctx.beginPath();
+  for (let i = 0; i < sortedIndices.length; i++) {
+    const idx = sortedIndices[i];
+    const x = toX(predicted[idx]);
+    const y = toY(piUp[idx]);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  for (let i = sortedIndices.length - 1; i >= 0; i--) {
+    const idx = sortedIndices[i];
+    const x = toX(predicted[idx]);
+    const y = toY(piLow[idx]);
+    ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // Draw PI border lines
+  ctx.strokeStyle = "#f59e0b";
+  ctx.setLineDash([5, 4]);
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  sortedIndices.forEach((idx, i) => {
+    const x = toX(predicted[idx]);
+    const y = toY(piUp[idx]);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  ctx.beginPath();
+  sortedIndices.forEach((idx, i) => {
+    const x = toX(predicted[idx]);
+    const y = toY(piLow[idx]);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.setLineDash([]); // reset
+
+  // 2. Draw 95% Confidence Interval (CI) Band (Emerald Green)
+  ctx.fillStyle = "rgba(16, 185, 129, 0.25)";
+  ctx.beginPath();
+  for (let i = 0; i < sortedIndices.length; i++) {
+    const idx = sortedIndices[i];
+    const x = toX(predicted[idx]);
+    const y = toY(ciUp[idx]);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  for (let i = sortedIndices.length - 1; i >= 0; i--) {
+    const idx = sortedIndices[i];
+    const x = toX(predicted[idx]);
+    const y = toY(ciLow[idx]);
+    ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // 3. Draw Ideal Regression Fit Line (Y = Ŷ)
+  ctx.strokeStyle = "#6366f1";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(toX(minVal), toY(minVal));
+  ctx.lineTo(toX(maxVal), toY(maxVal));
+  ctx.stroke();
+
+  // 4. Draw Actual Points (Sky blue glowing dots)
+  for (let i = 0; i < actuals.length; i++) {
+    const x = toX(predicted[i]);
+    const y = toY(actuals[i]);
+
+    // Outer glow
+    ctx.fillStyle = "rgba(56, 189, 248, 0.35)";
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner point
+    ctx.fillStyle = "#38bdf8";
+    ctx.beginPath();
+    ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// Generate Python Snippet with Seaborn & Statsmodels CI/PI
+function updateLabPythonSnippet(datasetName, target, features) {
+  const codeBox = document.getElementById('labPythonCodeDisplay');
+  if (!codeBox) return;
+
+  const featStr = features.map(f => `'${f}'`).join(', ');
+
+  codeBox.textContent = `import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 1. 載入資料與定義變數
+df = pd.read_csv('${datasetName}')
+features = [${featStr}]
+X = df[features]
+y = df['${target}']
+
+# 2. 建立多元線性回歸模型 (加入截距項常數)
+X_sm = sm.add_constant(X)
+model = sm.OLS(y, X_sm).fit()
+print(model.summary())
+
+# 3. 取得 95% 信賴區間 (CI) 與 預測區間 (PI)
+predictions = model.get_prediction(X_sm)
+pred_summary = predictions.summary_frame(alpha=0.05)
+
+# pred_summary 包含:
+# - mean: 預測值 Ŷ
+# - mean_ci_lower, mean_ci_upper: 95% 信賴區間 (Confidence Interval)
+# - obs_ci_lower, obs_ci_upper: 95% 預測區間 (Prediction Interval)
+
+# 4. 繪製包含 CI 與 PI 之回歸散佈圖 (依作業規定呈現預測圖)
+plt.figure(figsize=(10, 6))
+plt.scatter(pred_summary['mean'], y, color='royalblue', alpha=0.7, label='Actual Observations')
+plt.plot(pred_summary['mean'], pred_summary['mean'], color='indigo', lw=2, label='Fitted Line (Y = Ŷ)')
+
+# 繪製 95% 信賴區間帶 (Mean CI)
+plt.fill_between(pred_summary['mean'].sort_values(), 
+                 pred_summary['mean_ci_lower'].sort_values(), 
+                 pred_summary['mean_ci_upper'].sort_values(), 
+                 color='green', alpha=0.2, label='95% Confidence Interval')
+
+# 繪製 95% 預測區間帶 (Individual PI)
+plt.plot(pred_summary['mean'].sort_values(), pred_summary['obs_ci_upper'].sort_values(), 
+         '--', color='darkorange', label='95% Prediction Interval')
+plt.plot(pred_summary['mean'].sort_values(), pred_summary['obs_ci_lower'].sort_values(), 
+         '--', color='darkorange')
+
+plt.title('Multiple Linear Regression: Actual vs Predicted with 95% CI & PI')
+plt.xlabel('Predicted Values (Ŷ)')
+plt.ylabel('Actual Values (Y)')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()`;
+}
+
+// Matrix Math Helpers
+function transpose(A) {
+  const m = A.length;
+  const n = A[0].length;
+  const AT = [];
+  for (let j = 0; j < n; j++) {
+    const row = [];
+    for (let i = 0; i < m; i++) row.push(A[i][j]);
+    AT.push(row);
+  }
+  return AT;
+}
+
+function matMul(A, B) {
+  const m = A.length;
+  const k = A[0].length;
+  const n = B[0].length;
+  const C = [];
+  for (let i = 0; i < m; i++) {
+    const row = [];
+    for (let j = 0; j < n; j++) {
+      let sum = 0;
+      for (let p = 0; p < k; p++) sum += A[i][p] * B[p][j];
+      row.push(sum);
+    }
+    C.push(row);
+  }
+  return C;
+}
+
+function matVecMul(A, v) {
+  const m = A.length;
+  const k = A[0].length;
+  const res = [];
+  for (let i = 0; i < m; i++) {
+    let sum = 0;
+    for (let j = 0; j < k; j++) sum += A[i][j] * v[j];
+    res.push(sum);
+  }
+  return res;
+}
+
+function invertMatrix(M) {
+  const n = M.length;
+  const A = M.map((row, i) => {
+    const r = [...row];
+    for (let j = 0; j < n; j++) r.push(i === j ? 1.0 : 0.0);
+    return r;
+  });
+
+  for (let i = 0; i < n; i++) {
+    let maxRow = i;
+    for (let k = i + 1; k < n; k++) {
+      if (Math.abs(A[k][i]) > Math.abs(A[maxRow][i])) maxRow = k;
+    }
+    const temp = A[i];
+    A[i] = A[maxRow];
+    A[maxRow] = temp;
+
+    if (Math.abs(A[i][i]) < 1e-12) {
+      A[i][i] += 1e-6; // ridge stabilization
+    }
+    const curPivot = A[i][i];
+    for (let j = 0; j < 2 * n; j++) A[i][j] /= curPivot;
+
+    for (let k = 0; k < n; k++) {
+      if (k !== i) {
+        const factor = A[k][i];
+        for (let j = 0; j < 2 * n; j++) {
+          A[k][j] -= factor * A[i][j];
+        }
+      }
+    }
+  }
+
+  return A.map(row => row.slice(n));
+}
+

@@ -33,6 +33,7 @@
       </div>
 
       <nav class="nav-links">
+        <a href="#interactive-lab" class="nav-link nav-highlight">回歸實驗室 (加分 1+2分)</a>
         <a href="#datasets" class="nav-link">資料集總覽</a>
         <a href="#top3" class="nav-link">教學推薦 Top 3</a>
         <a href="#crisp-dm" class="nav-link">CRISP-DM 流程</a>
@@ -126,6 +127,153 @@
             <strong>特別注意規格提醒：</strong>
             Kaggle 經典題目 <em>House Prices — Advanced Regression Techniques</em> 原始包含 <strong>79 個特徵</strong>，
             無法直接符合原始特徵限制；但非常推薦將其作為 <strong>Feature Selection (特徵選擇)</strong> 專題，使用 SelectKBest 或 Lasso 篩選至 14–39 個特徵進行建模。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Regression Lab & Dataset Input (Extra Credit 1 + 2) -->
+    <section id="interactive-lab" class="section lab-section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">EXTRA CREDIT • 加總分 1分 + 2分專區</div>
+          <h2 class="section-title">多元線性回歸實驗室 & 任意資料集載入器</h2>
+          <p class="section-desc">支援下拉切換兩種題目，亦可任意輸入線上 CSV URL 或上傳本機資料集，即時擬合回歸並繪製 95% 信賴區間與預測區間圖。</p>
+        </div>
+
+        <div class="lab-card">
+          <!-- Problem Selection Dropdown (加總分 1分) -->
+          <div class="lab-problem-bar">
+            <div class="problem-label-group">
+              <span class="badge badge-primary">加總分 1分</span>
+              <label for="problemSelector" class="problem-select-label">選擇分析問題 (Problem Dropdown)：</label>
+            </div>
+            <select id="problemSelector" class="custom-select-input" aria-label="選擇回歸問題">
+              <option value="problem1">Problem 1: Kaggle >13 特徵回歸 (洪水發生機率預測 Predict the Flood, 20 特徵)</option>
+              <option value="problem2" selected>Problem 2: 50 Startups 創投利潤回歸 (50_Startups.csv, 4 特徵)</option>
+              <option value="custom">自訂問題：任意輸入線上 CSV 網址或本機檔案</option>
+            </select>
+          </div>
+
+          <!-- Dataset Input & Loader (加總分 2分) -->
+          <div class="lab-dataset-loader">
+            <div class="loader-header">
+              <div class="loader-title-group">
+                <span class="badge badge-success">加總分 2分</span>
+                <span class="loader-title">任意輸入資料集 (Dataset URL / File Upload)</span>
+              </div>
+              <div class="sample-pills">
+                <span style="font-size: 0.82rem; color: var(--text-muted);">快速範例：</span>
+                <button type="button" class="sample-btn" id="load50StartupsBtn">載入 50_Startups.csv</button>
+                <button type="button" class="sample-btn" id="loadFloodSampleBtn">載入 Kaggle 洪水 (20 特徵)</button>
+              </div>
+            </div>
+
+            <div class="url-input-row">
+              <div class="input-with-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                <input type="url" id="datasetUrlInput" placeholder="請輸入 CSV 資料集網址 (如: https://raw.githubusercontent.com/.../50_Startups.csv)" value="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv">
+              </div>
+              <button type="button" class="btn btn-primary" id="fetchUrlBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                載入資料
+              </button>
+              <label class="btn btn-outline file-upload-label" title="若遇到跨域 CORS 限制可直接上傳本機 CSV">
+                <input type="file" id="localCsvFile" accept=".csv" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m16 16-4-4-4 4"></path></svg>
+                本機上傳 CSV
+              </label>
+            </div>
+
+            <!-- Dataset Meta Info Bar -->
+            <div id="datasetMetaBar" class="dataset-meta-bar">
+              <div class="meta-item">
+                <span class="meta-label">資料來源狀態</span>
+                <span class="meta-val" id="metaSource">50_Startups.csv (範例)</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">總樣本數 (Rows)</span>
+                <span class="meta-val" id="metaRows">50 筆</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">輸入特徵數 (Features)</span>
+                <span class="meta-val" id="metaFeatures">4 個</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">作業規範檢驗 (>13 Features)</span>
+                <span id="metaFeatureCheckBadge" class="badge badge-warning">特徵數: 4 (50 Startups 示範題目)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configuration & Modeling Bar -->
+          <div class="lab-config-grid">
+            <div class="config-box">
+              <label for="targetSelect" class="config-label">1. 設定預測目標變數 (Target Y):</label>
+              <select id="targetSelect" class="custom-select-input"></select>
+            </div>
+            <div class="config-box">
+              <label class="config-label">2. 選擇輸入特徵 (Features X，可執行特徵選擇):</label>
+              <div id="featureCheckboxes" class="feature-checkboxes-container"></div>
+            </div>
+          </div>
+
+          <!-- Results & CI / PI Visualization -->
+          <div class="lab-results-container">
+            <!-- Metrics Ribbon -->
+            <div class="metrics-ribbon" id="metricsRibbon">
+              <div class="metric-card">
+                <div class="metric-title">決定係數 R²</div>
+                <div class="metric-num" id="metricR2">0.9507</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-title">調整後 R² (Adj-R²)</div>
+                <div class="metric-num" id="metricAdjR2">0.9475</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-title">均方根誤差 (RMSE)</div>
+                <div class="metric-num" id="metricRMSE">9,245.2</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-title">平均絕對誤差 (MAE)</div>
+                <div class="metric-num" id="metricMAE">6,743.8</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-title">殘差標準誤 (Se)</div>
+                <div class="metric-num" id="metricSe">9,541.3</div>
+              </div>
+            </div>
+
+            <!-- Regression Chart with CI & PI -->
+            <div class="chart-wrapper-box">
+              <div class="chart-header">
+                <div>
+                  <h4 class="chart-heading">回歸預測圖（含 95% 信賴區間 CI 與 預測區間 PI）</h4>
+                  <p class="chart-subheading">橫軸為預測值 $\hat{Y}$，縱軸為實際觀測值 $Y$。深色實線為完美預測線，綠色陰影帶為 95% 信賴區間 (Mean CI)，外圍虛線帶為 95% 預測區間 (Individual PI)。</p>
+                </div>
+                <div class="chart-legend">
+                  <span class="legend-item"><span class="legend-dot dot-actual"></span> 實際樣本點 (Actual Y)</span>
+                  <span class="legend-item"><span class="legend-line line-fit"></span> 完美預測線 (Y = Ŷ)</span>
+                  <span class="legend-item"><span class="legend-area area-ci"></span> 95% 信賴區間 (CI)</span>
+                  <span class="legend-item"><span class="legend-line line-pi"></span> 95% 預測區間 (PI)</span>
+                </div>
+              </div>
+              <div class="canvas-holder">
+                <canvas id="regressionChartCanvas" width="920" height="420"></canvas>
+              </div>
+            </div>
+
+            <!-- Python Code Output for CI / PI -->
+            <div class="code-container" style="margin-top: 24px;">
+              <div class="code-header">
+                <span>對應 Python Scikit-learn & Statsmodels 預測圖代碼 (含 CI / PI 區間計算)</span>
+                <button class="copy-code-btn" id="copyLabPythonBtn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  複製 Python 代碼
+                </button>
+              </div>
+              <pre class="code-snippet"><code id="labPythonCodeDisplay"></code></pre>
+            </div>
           </div>
         </div>
       </div>
