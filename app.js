@@ -383,20 +383,30 @@ function initThemeToggle() {
   const sunIcon = document.getElementById('sunIcon');
   const html = document.documentElement;
 
-  // Restore saved theme
-  const savedTheme = localStorage.getItem('mlr_theme') || 'dark';
+  // Restore saved theme safely
+  let savedTheme = 'dark';
+  try {
+    savedTheme = localStorage.getItem('mlr_theme') || 'dark';
+  } catch (e) {
+    console.warn("Storage access restricted:", e);
+  }
   html.setAttribute('data-theme', savedTheme);
   updateThemeIcons(savedTheme);
 
-  toggleBtn.addEventListener('click', () => {
-    const currentTheme = html.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    html.setAttribute('data-theme', newTheme);
-    localStorage.setItem('mlr_theme', newTheme);
-    updateThemeIcons(newTheme);
-  });
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      try {
+        localStorage.setItem('mlr_theme', newTheme);
+      } catch (e) {}
+      updateThemeIcons(newTheme);
+    });
+  }
 
   function updateThemeIcons(theme) {
+    if (!moonIcon || !sunIcon) return;
     if (theme === 'dark') {
       moonIcon.classList.remove('hidden');
       sunIcon.classList.add('hidden');
